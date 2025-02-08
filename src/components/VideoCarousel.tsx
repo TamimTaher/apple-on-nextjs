@@ -20,9 +20,9 @@ interface VideoState {
 }
 
 const VideoCarousel: React.FC = () => {
-  const videoRef = useRef<(HTMLVideoElement | null)[]>([]);
-  const videoSpanRef = useRef<(HTMLSpanElement | null)[]>([]);
-  const videoDivRef = useRef<(HTMLSpanElement | null)[]>([]);
+  const videoRef = useRef<HTMLVideoElement[]>([]);
+  const videoSpanRef = useRef<HTMLSpanElement[]>([]);
+  const videoDivRef = useRef<HTMLSpanElement[]>([]);
 
   const [video, setVideo] = useState<VideoState>({
     isEnd: false,
@@ -195,7 +195,11 @@ const VideoCarousel: React.FC = () => {
                   playsInline={true}
                   preload="auto"
                   muted
-                  ref={(el) => (videoRef.current[i] = el)}
+                  ref={(el) => {
+                    if (el) {
+                      videoRef.current[i] = el;
+                    }
+                  }}
                   onEnded={() =>
                     handleProcess("video-end", i)
                   }
@@ -226,11 +230,19 @@ const VideoCarousel: React.FC = () => {
             <span
               key={i}
               className="mx-2 w-3 h-3 bg-gray-200 rounded-full relative cursor-pointer"
-              ref={(el) => (videoDivRef.current[i] = el)}
+              ref={(el) => {
+                if (el) {
+                  videoDivRef.current[i] = el;
+                }
+              }}
             >
               <span
                 className="absolute h-full w-full rounded-full"
-                ref={(el) => (videoSpanRef.current[i] = el)}
+                ref={(el) => {
+                  if (el) {
+                    videoSpanRef.current[i] = el;
+                  }
+                }}
               />
             </span>
           ))}
