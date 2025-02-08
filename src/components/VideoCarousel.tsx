@@ -3,23 +3,33 @@
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/all";
-gsap.registerPlugin(ScrollTrigger);
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { hightlightsSlides } from "../constants";
 import { pauseImg, playImg, replayImg } from "../utils";
+
+gsap.registerPlugin(ScrollTrigger);
+
+type ProcessType = 'video-end' | 'pause' | 'play';
+
+interface VideoState {
+  isEnd: boolean;
+  startPlay: boolean;
+  videoId: number;
+  isLastVideo: boolean;
+  isPlaying: boolean;
+}
 
 const VideoCarousel: React.FC = () => {
   const videoRef = useRef<(HTMLVideoElement | null)[]>([]);
   const videoSpanRef = useRef<(HTMLSpanElement | null)[]>([]);
-  const videoDivRef = useRef<(HTMLDivElement | null)[]>([]);
+  const videoDivRef = useRef<(HTMLSpanElement | null)[]>([]);
 
-  // video and indicator
-  const [video, setVideo] = useState({
+  const [video, setVideo] = useState<VideoState>({
     isEnd: false,
-    startPlay: true,  // Set to true to autoplay the first video
+    startPlay: true,
     videoId: 0,
     isLastVideo: false,
-    isPlaying: true,  // Autoplay the first video
+    isPlaying: true,
   });
 
   const [loadedData, setLoadedData] = useState<Event[]>([]);
@@ -133,40 +143,39 @@ const VideoCarousel: React.FC = () => {
     }
   }, [isPlaying, videoId, loadedData]);
 
-  const handleProcess = (type: string, i: number) => {
-    switch (type) {
-      case "video-end":
-        // If not the last video, move to the next video
-        if (i < hightlightsSlides.length - 1) {
-          setVideo((pre) => ({
-            ...pre,
-            videoId: i + 1,
-            isPlaying: true,
-          }));
-        } else {
-          // Last video ends, loop back to the first video
-          setTimeout(() => {
-            setVideo((pre) => ({
-              ...pre,
-              videoId: 0,
+  const handleProcess = (type: ProcessType, i: number) => {
+    try {
+      switch (type) {
+        case "video-end":
+          if (i < hightlightsSlides.length - 1) {
+            setVideo((prev) => ({
+              ...prev,
+              videoId: i + 1,
               isPlaying: true,
             }));
-          }, 1000); // Add a slight delay for smooth transition
-        }
-        break;
+          } else {
+            setTimeout(() => {
+              setVideo((prev) => ({
+                ...prev,
+                videoId: 0,
+                isPlaying: true,
+              }));
+            }, 1000);
+          }
+          break;
 
-      case "pause":
-        setVideo((pre) => ({ ...pre, isPlaying: false }));
-        videoRef.current[videoId]?.pause();
-        break;
+        case "pause":
+          setVideo((prev) => ({ ...prev, isPlaying: false }));
+          videoRef.current[videoId]?.pause();
+          break;
 
-      case "play":
-        setVideo((pre) => ({ ...pre, isPlaying: true }));
-        videoRef.current[videoId]?.play();
-        break;
-
-      default:
-        break;
+        case "play":
+          setVideo((prev) => ({ ...prev, isPlaying: true }));
+          videoRef.current[videoId]?.play();
+          break;
+      }
+    } catch (error) {
+      console.error('Error in handleProcess:', error);
     }
   };
 
